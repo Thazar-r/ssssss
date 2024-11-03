@@ -1,0 +1,49 @@
+import random
+
+class AI:
+    def __init__(self, max_turns):
+        self.turn = -1
+        self.visited = set()
+        self.depth_limit = 1
+        self.current_depth = 0
+        self.goals_found = set()
+        self.teleports_used = set()
+
+    def update(self, percepts, msg):
+        self.turn += 1
+        current_position = percepts['X'][0]
+
+        if msg == 'EXIT':
+            self.depth_limit = max(self.depth_limit, 3)
+
+        if current_position in '0123456789' and current_position not in self.goals_found:
+            self.goals_found.add(current_position)
+            return 'U', f"Goal {current_position} activated"
+
+        if current_position in 'obyp' and current_position not in self.teleports_used:
+            self.teleports_used.add(current_position)
+            return 'U', "Teleport used"
+
+        if self.current_depth >= self.depth_limit:
+            self.depth_limit += 1
+            self.current_depth = 0
+            self.teleports_used.clear()
+
+        unexplored_directions = []
+        for direction in ['N', 'E', 'S', 'W']:
+            cell = percepts[direction][0]
+            if cell in '0123456789' and cell not in self.goals_found:
+                return direction, f"Goal {cell} found"
+            if cell == 'g' and cell not in self.visited:
+                unexplored_directions.append(direction)
+
+        if unexplored_directions:
+            move_direction = unexplored_directions[0]
+            self.visited.add(move_direction)
+            self.current_depth += 1
+            return move_direction, "B exploring"
+
+        if self.current_depth < self.depth_limit:
+            return random.choice(['N', 'E', 'S', 'W']), "B backtracking"
+
+        return random.choice(['N', 'E', 'S', 'W']), "B random move"
