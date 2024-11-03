@@ -1,0 +1,37 @@
+import random
+
+class AI:
+    def __init__(self, max_turns):
+        self.turn = -1
+        self.visited = set()
+        self.path = []
+        self.exit_position = None
+
+    def update(self, percepts, msg):
+        self.turn += 1
+        current_position = percepts['X'][0]
+
+        if current_position == 'r' or msg == 'EXIT':
+            return 'U', "EXIT"
+
+        if isinstance(msg, tuple):
+            self.exit_position = msg
+
+        self.visited.add(current_position)
+        unexplored_directions = []
+        for direction in ['N', 'E', 'S', 'W']:
+            cell = percepts[direction][0]
+            if cell == 'r':
+                return direction, "EXIT"
+            elif cell == 'g' and cell not in self.visited:
+                unexplored_directions.append(direction)
+
+        if unexplored_directions:
+            move_direction = unexplored_directions[0]
+            self.path.append(move_direction)
+            return move_direction, "A moving"
+
+        if self.path:
+            return self.path.pop(), "A backtracking"
+
+        return random.choice(['N', 'E', 'S', 'W']), "A random move"
